@@ -49,6 +49,17 @@ result = client.predict_at(
 )
 for v in result.velocities:
     print(f"  speed = {v.speed:.2f} m/s")
+
+# Visualize:
+from IPython.display import display, Image
+
+# currently support xy-plane visualization
+contour = client.coutour(
+    jobs.job_id,
+    z=2.0 # define the evaluation height, in unit (m)
+)
+contour_path = contour.save_png("contour.png")
+display(Image(filename="contour.png"))
 ```
 
 ## All Methods
