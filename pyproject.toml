@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "urbanwind"
+version = "0.1.0"
+description = "Python SDK for the Urban Wind Solver API"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [{name = "GUST Team"}]
+dependencies = [
+    "requests>=2.25",
+    "numpy>=1.20",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7",
+    "pytest-cov",
+]
+
+[project.urls]
+Homepage = "https://github.com/YOUR_USERNAME/urbanwind-sdk"
+Issues = "https://github.com/YOUR_USERNAME/urbanwind-sdk/issues"
+
+[tool.setuptools.packages.find]
+include = ["urbanwind*"]
