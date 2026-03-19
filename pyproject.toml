@@ -22,8 +22,8 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/YOUR_USERNAME/urbanwind-sdk"
-Issues = "https://github.com/YOUR_USERNAME/urbanwind-sdk/issues"
+Homepage = "https://github.com/pic-wang/urbanwind-sdk"
+Issues = "https://github.com/pic-wang/urbanwind-sdk/issues"
 
 [tool.setuptools.packages.find]
 include = ["urbanwind*"]

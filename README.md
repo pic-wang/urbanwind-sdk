@@ -7,13 +7,13 @@ A Python client for the Urban Wind Solver API, providing programmatic access to 
 **From GitHub (recommended):**
 
 ```bash
-pip install git+https://github.com/YOUR_USERNAME/urbanwind-sdk.git
+pip install git+https://github.com/pic-wang/urbanwind-sdk.git
 ```
 
 **From local source:**
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/urbanwind-sdk.git
+git clone https://github.com/pic-wang/urbanwind-sdk.git
 cd urbanwind-sdk
 pip install .
 ```
