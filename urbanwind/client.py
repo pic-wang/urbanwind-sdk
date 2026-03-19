@@ -85,7 +85,7 @@ class Client:
                 "/api/v1/jobs/predict",
                 files={"file": (stl.name, fp, "application/sla")},
             )
-        body = resp.json()
+        body = self._http.json(resp)
         return PredictJob(
             job_id=body["job_id"],
             status=body["status"],
@@ -111,7 +111,7 @@ class Client:
                 data={"timeout": str(timeout)},
                 timeout=timeout + 30,  # HTTP timeout slightly longer
             )
-        body = resp.json()
+        body = self._http.json(resp)
         return PredictResult(
             job_id=body["job_id"],
             n_points=body.get("n_points"),
@@ -153,7 +153,7 @@ class Client:
         else:
             raise ValueError("Provide either points or points_file")
 
-        body = resp.json()
+        body = self._http.json(resp)
         return [VelocityPoint.from_dict(r) for r in body.get("results", [])]
 
     # ------------------------------------------------------------------ #
@@ -176,7 +176,7 @@ class Client:
                 "n_levels": str(n_levels),
             },
         )
-        body = resp.json()
+        body = self._http.json(resp)
         return ContourResult(
             job_id=body["job_id"],
             z=body["z"],
@@ -236,7 +236,7 @@ class Client:
                     timeout=timeout + 30,
                 )
 
-        body = resp.json()
+        body = self._http.json(resp)
         velocities = [
             VelocityPoint.from_dict(r)
             for r in body.get("query_results", [])
@@ -301,12 +301,12 @@ class Client:
             "/api/v1/jobs",
             params={"limit": limit, "offset": offset},
         )
-        return resp.json()
+        return self._http.json(resp)
 
     def delete_job(self, job_id: str) -> bool:
         """Delete a job and its artifacts."""
         resp = self._http.delete(f"/api/v1/jobs/{job_id}")
-        return resp.json().get("deleted", False)
+        return self._http.json(resp).get("deleted", False)
 
     # ------------------------------------------------------------------ #
     #  Internal helpers                                                   #
@@ -314,11 +314,11 @@ class Client:
 
     def _poll_job(self, job_id: str) -> Dict[str, Any]:
         resp = self._http.get(f"/api/v1/jobs/{job_id}")
-        return resp.json()
+        return self._http.json(resp)
 
     def _get_result(self, job_id: str) -> PredictResult:
         resp = self._http.get(f"/api/v1/jobs/{job_id}/result")
-        body = resp.json()
+        body = self._http.json(resp)
         return PredictResult(
             job_id=body["job_id"],
             n_points=body.get("summary", {}).get("n_points"),

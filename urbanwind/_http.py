@@ -58,6 +58,30 @@ class HttpClient:
         resp = self.get(path, stream=True)
         return resp.content
 
+    def json(self, resp: requests.Response) -> Any:
+        """Safely parse *resp* as JSON with a clear error message."""
+        ct = resp.headers.get("Content-Type", "")
+        body = resp.text
+        if not body:
+            raise UrbanWindError(
+                f"Server returned an empty response "
+                f"(HTTP {resp.status_code}, url={resp.url}). "
+                f"Is the server running?"
+            )
+        if "application/json" not in ct and body.lstrip()[:1] not in ("{", "["):
+            raise UrbanWindError(
+                f"Expected JSON but got Content-Type={ct!r} "
+                f"(HTTP {resp.status_code}, url={resp.url}). "
+                f"Body preview: {body[:200]}"
+            )
+        try:
+            return resp.json()
+        except ValueError as exc:
+            raise UrbanWindError(
+                f"Failed to parse JSON (HTTP {resp.status_code}, "
+                f"url={resp.url}). Body preview: {body[:200]}"
+            ) from exc
+
     # ---- internals ----
 
     def _request(self, method: str, path: str, **kwargs: Any) -> requests.Response:
