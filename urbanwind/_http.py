@@ -99,6 +99,7 @@ class HttpClient:
                     continue
                 raise UrbanWindError(f"Connection error: {exc}") from exc
 
+            # Retry on 429 / 5xx
             if resp.status_code == 429 or resp.status_code >= 500:
                 last_exc = UrbanWindError(
                     f"HTTP {resp.status_code}: {resp.text[:200]}",
@@ -107,6 +108,16 @@ class HttpClient:
                 if attempt < self.max_retries:
                     retry_after = float(resp.headers.get("Retry-After", 2 ** attempt))
                     time.sleep(min(retry_after, 30))
+                    continue
+
+            # Retry on empty response (common with Cloudflare Tunnel)
+            if not resp.content and resp.status_code < 400:
+                last_exc = UrbanWindError(
+                    f"Empty response (HTTP {resp.status_code}, url={url}). "
+                    f"Tunnel may have dropped the connection."
+                )
+                if attempt < self.max_retries:
+                    time.sleep(min(2 ** attempt, 10))
                     continue
 
             self._raise_for_status(resp)
