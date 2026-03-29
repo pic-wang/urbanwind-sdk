@@ -99,7 +99,8 @@ class Client:
         stl: Union[str, Path],
         timeout: float = 300.0,
     ) -> PredictResult:
-        """Synchronous full-field prediction (blocks until done).
+        """
+        Synchronous full-field prediction (blocks until done).
 
         Calls ``POST /api/v1/predict/field`` which blocks server-side.
         """
@@ -130,11 +131,22 @@ class Client:
         *,
         points: Optional[List[List[float]]] = None,
         points_file: Optional[Union[str, Path]] = None,
+        output_path: Optional[Union[str, Path]] = None,
     ) -> List[VelocityPoint]:
-        """Query wind velocity at specific coordinates.
+        """
+        Query wind velocity at specific coordinates.
 
         Provide *either* ``points`` (list of ``[x, y, z]``) or
         ``points_file`` (path to a coordinates text file).
+
+        Parameters
+        ----------
+        output_path : str or Path, optional
+            If provided, save the query results to this local file as
+            plain text.  When ``points_file`` is used the server response
+            (which preserves comments / blank lines from the input) is
+            written directly; when ``points`` is used a text file is
+            generated from the returned velocity data.
         """
         kwargs: Dict[str, Any] = {}
 
@@ -145,6 +157,12 @@ class Client:
                 resp = self._http.post(
                     f"/api/v1/jobs/{job_id}/query", **kwargs,
                 )
+            # Server returns plain text when input is a file
+            if output_path is not None:
+                output_path = Path(output_path)
+                output_path.parent.mkdir(parents=True, exist_ok=True)
+                output_path.write_text(resp.text, encoding="utf-8")
+            return self._parse_velocity_text(resp.text)
         elif points is not None:
             resp = self._http.post(
                 f"/api/v1/jobs/{job_id}/query",
@@ -154,7 +172,39 @@ class Client:
             raise ValueError("Provide either points or points_file")
 
         body = self._http.json(resp)
-        return [VelocityPoint.from_dict(r) for r in body.get("results", [])]
+        results = [VelocityPoint.from_dict(r) for r in body.get("results", [])]
+
+        if output_path is not None:
+            output_path = Path(output_path)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(output_path, "w", encoding="utf-8") as f:
+                f.write("# x y z  ux uy uz  speed\n")
+                for v in results:
+                    f.write(
+                        f"{v.x:.6f} {v.y:.6f} {v.z:.6f}  "
+                        f"{v.ux:.6f} {v.uy:.6f} {v.uz:.6f}  "
+                        f"{v.speed:.6f}\n"
+                    )
+
+        return results
+
+    @staticmethod
+    def _parse_velocity_text(text: str) -> List[VelocityPoint]:
+        """Parse plain-text velocity output (one ``x y z ux uy uz speed`` per line)."""
+        results: List[VelocityPoint] = []
+        for line in text.splitlines():
+            s = line.strip()
+            if not s or s.startswith("#"):
+                continue
+            parts = s.split()
+            if len(parts) < 7:
+                continue
+            results.append(VelocityPoint(
+                x=float(parts[0]), y=float(parts[1]), z=float(parts[2]),
+                ux=float(parts[3]), uy=float(parts[4]), uz=float(parts[5]),
+                speed=float(parts[6]),
+            ))
+        return results
 
     # ------------------------------------------------------------------ #
     #  Contour                                                            #
