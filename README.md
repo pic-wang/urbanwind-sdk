@@ -54,8 +54,8 @@ for v in result.velocities:
 from IPython.display import display, Image
 
 # currently support xy-plane visualization
-contour = client.coutour(
-    jobs.job_id,
+contour = client.contour(
+    job.job_id,
     z=2.0 # define the evaluation height, in unit (m)
 )
 contour_path = contour.save_png("contour.png")
